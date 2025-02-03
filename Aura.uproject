@@ -38,10 +38,6 @@
 		{
 			"Name": "ModelViewViewModel",
 			"Enabled": true
-		},
-		{
-			"Name": "GameLiftPlugin",
-			"Enabled": true
 		}
 	],
 	"EngineAssociation": "{928145F6-4367-9CE2-6C77-0CAB92A98140}"

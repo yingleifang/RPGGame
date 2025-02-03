@@ -1,0 +1,75 @@
+// Copyright Druid Mechanics
+
+
+#include "Player/ShooterController.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+
+AShooterController::AShooterController()
+{
+	bReplicates = true;
+}
+
+void AShooterController::BeginPlay()
+{
+	Super::BeginPlay();
+	check(ShooterContext);
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
+	check(Subsystem);
+	Subsystem->AddMappingContext(ShooterContext, 0);
+	DefaultMouseCursor = EMouseCursor::Default;
+	FInputModeGameOnly  InputModeData;
+	SetInputMode(InputModeData);
+}
+
+void AShooterController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+	EnhancedInputComponent->BindAction(MoveFowardAction, ETriggerEvent::Triggered, this, &AShooterController::MoveForward);
+	EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AShooterController::MoveRight);
+	EnhancedInputComponent->BindAction(LookUpAction, ETriggerEvent::Triggered, this, &AShooterController::LookUp);
+	EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Triggered, this, &AShooterController::Turn);
+
+}
+
+void AShooterController::MoveForward(const FInputActionValue& InputActionValue)
+{
+	const float InputValue = InputActionValue.Get<float>();
+
+	// Create a rotation that only uses the controller's yaw.
+	// This ensures movement is restricted to the horizontal plane.
+	const FRotator YawRotation(0.f, GetControlRotation().Yaw, 0.f);
+            
+	// Compute the forward direction from the yaw rotation
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+            
+	GetPawn()->AddMovementInput(Direction, InputValue);
+}
+
+void AShooterController::MoveRight(const FInputActionValue& InputActionValue)
+{
+	const float InputValue = InputActionValue.Get<float>();
+	// Construct a rotation that only uses the controller's yaw (ignoring pitch and roll)
+	const FRotator YawRotation(0.f, GetControlRotation().Yaw, 0.f);
+            
+	// Compute the right direction based on the yaw rotation.
+	// Using the Y axis gives the right vector relative to the camera's horizontal facing.
+	const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+            
+	// Add movement input in the right direction scaled by the input value
+	GetPawn()->AddMovementInput(Direction, InputValue);
+}
+
+void AShooterController::LookUp(const FInputActionValue& InputActionValue)
+{
+	const float InputValue = InputActionValue.Get<float>();
+	AddPitchInput(InputValue);
+}
+
+void AShooterController::Turn(const FInputActionValue& InputActionValue)
+{
+	const float InputValue = InputActionValue.Get<float>();
+	AddYawInput(InputValue);
+}
+
