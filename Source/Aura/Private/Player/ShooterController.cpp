@@ -4,6 +4,7 @@
 #include "Player/ShooterController.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Character/ShooterCharacter.h"
 
 AShooterController::AShooterController()
 {
@@ -30,7 +31,9 @@ void AShooterController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &AShooterController::MoveRight);
 	EnhancedInputComponent->BindAction(LookUpAction, ETriggerEvent::Triggered, this, &AShooterController::LookUp);
 	EnhancedInputComponent->BindAction(TurnAction, ETriggerEvent::Triggered, this, &AShooterController::Turn);
-
+	EnhancedInputComponent->BindAction(PickupAction, ETriggerEvent::Triggered, this, &AShooterController::Pickup);
+	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AShooterController::Aim);
+	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AShooterController::StopAim);
 }
 
 void AShooterController::MoveForward(const FInputActionValue& InputActionValue)
@@ -71,5 +74,32 @@ void AShooterController::Turn(const FInputActionValue& InputActionValue)
 {
 	const float InputValue = InputActionValue.Get<float>();
 	AddYawInput(InputValue);
+}
+
+void AShooterController::Pickup(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		ShooterCharacter->EquipWeapon();
+	}
+}
+
+void AShooterController::Aim(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		ShooterCharacter->Aim();
+	}
+}
+
+void AShooterController::StopAim(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		ShooterCharacter->StopAim();
+	}
 }
 

@@ -43,4 +43,13 @@ private:
 	TObjectPtr<UInputAction> TurnAction;
 	
 	void Turn(const FInputActionValue& InputActionValue);
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> PickupAction;
+	void Pickup(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> AimAction;
+	void Aim(const FInputActionValue& InputActionValue);
+	void StopAim(const FInputActionValue& InputActionValue);
 };
