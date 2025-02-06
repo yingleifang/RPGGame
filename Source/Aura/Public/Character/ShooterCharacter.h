@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Aura/TurningInPlace.h"
 #include "ShooterCharacter.generated.h"
 
 UCLASS()
@@ -31,7 +32,11 @@ public:
 	void StopAim();
 	bool IsWeaponEquipped();
 	bool IsAiming();
-	
+	void AimOffset(float DeltaTime);
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
+	AWeapon* GetEquippedWeapon();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -41,4 +46,10 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
+
+	float AO_Yaw;
+	float AO_Pitch;
+	FRotator StartingAimRotation;
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 };

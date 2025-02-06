@@ -5,6 +5,7 @@
 #include "Aura/Weapon/Weapon.h"
 #include "Aura/Public/Character/ShooterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -47,4 +48,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(TargetCharacter);
 	EquippedWeapon->ShowPickupWidget(false);
+	TargetCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
+	TargetCharacter->bUseControllerRotationYaw = true;
+	
 }

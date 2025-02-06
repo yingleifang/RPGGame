@@ -50,6 +50,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void ShowPickupWidget(bool bShowWidget);
 	FORCEINLINE void SetWeaponState(EWeaponState State) { WeaponState = State; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")

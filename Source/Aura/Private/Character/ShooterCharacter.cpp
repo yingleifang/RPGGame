@@ -7,7 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Aura/Weapon/Weapon.h"
 #include "Aura/Components/CombatComponent.h"
-
+#include "Kismet/KismetMaterialLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -40,6 +41,7 @@ void AShooterCharacter::BeginPlay()
 void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	AimOffset(DeltaTime);
 }
 
 void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -99,4 +101,48 @@ bool AShooterCharacter::IsWeaponEquipped()
 bool AShooterCharacter::IsAiming()
 {
 	return (Combat && Combat->bAiming);
+}
+
+void AShooterCharacter::AimOffset(float DeltaTime)
+{
+	if (Combat && Combat->EquippedWeapon == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0f;
+	float Speed = Velocity.Size();
+	bool bIsInair = GetCharacterMovement()->IsFalling();
+	if (Speed == 0.0f && !bIsInair)
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(StartingAimRotation, CurrentAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+		TurnInPlace(DeltaTime);
+	}
+	if (Speed > 0.f || bIsInair)
+	{
+		StartingAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
+}
+
+AWeapon* AShooterCharacter::GetEquippedWeapon()
+{
+	if (Combat == nullptr) return nullptr;
+	return Combat->EquippedWeapon;
+}
+
+void AShooterCharacter::TurnInPlace(float DeltaTime)
+{
+	if (AO_Yaw > 90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if (AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
 }

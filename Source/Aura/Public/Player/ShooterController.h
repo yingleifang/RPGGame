@@ -52,4 +52,8 @@ private:
 	TObjectPtr<UInputAction> AimAction;
 	void Aim(const FInputActionValue& InputActionValue);
 	void StopAim(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> JumpAction;
+	void Jump(const FInputActionValue& InputActionValue);
 };
