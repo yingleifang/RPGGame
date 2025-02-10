@@ -25,18 +25,27 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void SetOverlappingWeapon(AWeapon* Weapon);
-
+	void PlayFireMontage(bool);
 	virtual void PostInitializeComponents() override;
 	void EquipWeapon();
 	void Aim();
 	void StopAim();
+	void Fire();
+	void StopFire();
 	bool IsWeaponEquipped();
 	bool IsAiming();
+	bool IsFiring();
 	void AimOffset(float DeltaTime);
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
+	FRotator StartingAimRotation;
 	AWeapon* GetEquippedWeapon();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
+	float JumpCooldownDuration = 0.2f; // Example cooldown duration in seconds
+
+	bool bCanJump = true;
+	FTimerHandle JumpCooldownTimerHandle;
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -46,10 +55,16 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
-
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* FireWeaponMontage;
+	
 	float AO_Yaw;
+	float InterpAO_Yaw;
 	float AO_Pitch;
-	FRotator StartingAimRotation;
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+	virtual void Landed(const FHitResult& Hit) override;
+	void ResetJump();  
 };
+

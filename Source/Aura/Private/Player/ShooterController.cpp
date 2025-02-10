@@ -35,7 +35,8 @@ void AShooterController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AShooterController::Aim);
 	EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AShooterController::StopAim);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AShooterController::Jump);
-
+	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AShooterController::Fire);
+	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AShooterController::StopFire);
 }
 
 void AShooterController::MoveForward(const FInputActionValue& InputActionValue)
@@ -80,6 +81,7 @@ void AShooterController::Turn(const FInputActionValue& InputActionValue)
 
 void AShooterController::Pickup(const FInputActionValue& InputActionValue)
 {
+
 	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
 	if (ShooterCharacter)
 	{
@@ -108,9 +110,27 @@ void AShooterController::StopAim(const FInputActionValue& InputActionValue)
 void AShooterController::Jump(const FInputActionValue& InputActionValue)
 {
 	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
-	if (ShooterCharacter)
+	if (ShooterCharacter && ShooterCharacter->bCanJump)
 	{
 		ShooterCharacter->Jump();
+	}
+}
+
+void AShooterController::Fire(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter && ShooterCharacter->bCanJump)
+	{
+		ShooterCharacter->Fire();
+	}
+}
+
+void AShooterController::StopFire(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter && ShooterCharacter->bCanJump)
+	{
+		ShooterCharacter->StopFire();
 	}
 }
 

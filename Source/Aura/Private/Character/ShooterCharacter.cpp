@@ -7,8 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Aura/Weapon/Weapon.h"
 #include "Aura/Components/CombatComponent.h"
-#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -28,6 +28,10 @@ AShooterCharacter::AShooterCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 // Called when the game starts or when spawned
@@ -60,6 +64,18 @@ void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	}
 }
 
+void AShooterCharacter::PlayFireMontage(bool bAiming)
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		const FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
 void AShooterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -67,6 +83,7 @@ void AShooterCharacter::PostInitializeComponents()
 	{
 		Combat->TargetCharacter = this;
 	}
+	Combat->PrimaryComponentTick.bCanEverTick = true;
 }
 
 void AShooterCharacter::EquipWeapon()
@@ -81,7 +98,7 @@ void AShooterCharacter::Aim()
 {
 	if (Combat)
 	{
-		Combat->bAiming = true;
+		Combat->SetAiming(true);
 	}
 }
 
@@ -89,7 +106,23 @@ void AShooterCharacter::StopAim()
 {
 	if (Combat)
 	{
-		Combat->bAiming = false;
+		Combat->SetAiming(false);
+	}
+}
+
+void AShooterCharacter::Fire()
+{
+	if (Combat)
+	{
+		Combat->SetFiring(true);
+	}
+}
+
+void AShooterCharacter::StopFire()
+{
+	if (Combat)
+	{
+		Combat->SetFiring(false);
 	}
 }
 
@@ -101,6 +134,11 @@ bool AShooterCharacter::IsWeaponEquipped()
 bool AShooterCharacter::IsAiming()
 {
 	return (Combat && Combat->bAiming);
+}
+
+bool AShooterCharacter::IsFiring()
+{
+	return (Combat && Combat->bFiring);
 }
 
 void AShooterCharacter::AimOffset(float DeltaTime)
@@ -115,7 +153,11 @@ void AShooterCharacter::AimOffset(float DeltaTime)
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(StartingAimRotation, CurrentAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw = false;
+		if (TurningInPlace == ETurningInPlace::ETIP_NotTurning)
+		{
+			InterpAO_Yaw = AO_Yaw;
+		}
+		bUseControllerRotationYaw = true;
 		TurnInPlace(DeltaTime);
 	}
 	if (Speed > 0.f || bIsInair)
@@ -145,4 +187,30 @@ void AShooterCharacter::TurnInPlace(float DeltaTime)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Left;
 	}
+	if (TurningInPlace != ETurningInPlace::ETIP_NotTurning)
+	{
+		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 4.f);
+		AO_Yaw = InterpAO_Yaw;
+		if (FMath::Abs(AO_Yaw) < 15.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
+	}
+}
+
+void AShooterCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	// Disable jumping immediately after landing
+	bCanJump = false;
+
+	// Set a timer to re-enable jumping after JumpCooldownDuration seconds
+	GetWorldTimerManager().SetTimer(JumpCooldownTimerHandle, this, &AShooterCharacter::ResetJump, JumpCooldownDuration, false);
+}
+
+void AShooterCharacter::ResetJump()
+{
+	bCanJump = true;
 }

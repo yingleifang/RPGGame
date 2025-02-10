@@ -56,4 +56,10 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> JumpAction;
 	void Jump(const FInputActionValue& InputActionValue);
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> FireAction;
+	void Fire(const FInputActionValue& InputActionValue);
+	void StopFire(const FInputActionValue& InputActionValue);
+
 };

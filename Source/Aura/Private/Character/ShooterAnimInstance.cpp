@@ -27,15 +27,12 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsInAir = ShooterCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = ShooterCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f;
 
-	bWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
-	EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
-	bAiming = ShooterCharacter->IsAiming();
-	TurningInPlace = ShooterCharacter->GetTurningInPlace();
-
 	// Offset Yaw for Strafing
 	FRotator AimRotation = ShooterCharacter->GetBaseAimRotation();
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity());
-	YawOffset = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
+	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTime, 15.f);
+	YawOffset = DeltaRotation.Yaw;
 
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
@@ -49,6 +46,12 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
 		
 	}
+
+	bWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
+	EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
+	bAiming = ShooterCharacter->IsAiming();
+	TurningInPlace = ShooterCharacter->GetTurningInPlace();
+	bFiring = ShooterCharacter->IsFiring();
 }
 
 
