@@ -34,6 +34,13 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTime, 15.f);
 	YawOffset = DeltaRotation.Yaw;
 
+		
+	bWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
+	EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
+	bAiming = ShooterCharacter->IsAiming();
+	TurningInPlace = ShooterCharacter->GetTurningInPlace();
+	bFiring = ShooterCharacter->IsFiring();
+
 	AO_Yaw = ShooterCharacter->GetAO_Yaw();
 	AO_Pitch = ShooterCharacter->GetAO_Pitch();
 	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && ShooterCharacter->GetMesh())
@@ -44,14 +51,10 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		ShooterCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
-		
-	}
 
-	bWeaponEquipped = ShooterCharacter->IsWeaponEquipped();
-	EquippedWeapon = ShooterCharacter->GetEquippedWeapon();
-	bAiming = ShooterCharacter->IsAiming();
-	TurningInPlace = ShooterCharacter->GetTurningInPlace();
-	bFiring = ShooterCharacter->IsFiring();
+		FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World);
+		RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - ShooterCharacter->GetHitTarget()));
+	}
 }
 
 

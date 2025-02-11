@@ -25,6 +25,18 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	/** 
+* Aiming and FOV
+*/
+	// Field of view when not aiming; set to the camera's base FOV in BeginPlay
+	float DefaultFOV;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomedFOV = 30.f;
+	float CurrentFOV;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomInterpSpeed = 20.f;
+	void InterpFOV(float DeltaTime);
+	
 	friend class AShooterCharacter;
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	UPROPERTY(EditAnywhere)
@@ -50,9 +62,11 @@ private:
 private:
 	bool bAiming;
 	bool bFiring;
+	FVector HitTarget;
 	/** 
 * HUD and crosshairs
 */
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	
 };

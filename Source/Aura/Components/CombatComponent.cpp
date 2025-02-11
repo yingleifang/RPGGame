@@ -10,6 +10,8 @@
 #include "DrawDebugHelpers.h"
 #include "Aura/Public/Player/ShooterController.h"
 #include "Aura/Public/UI/HUD/ShooterHUD.h"
+#include "Camera/CameraComponent.h"
+
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -32,6 +34,11 @@ void UCombatComponent::BeginPlay()
 	if (TargetCharacter)
 	{
 		TargetCharacter->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		if (TargetCharacter->GetFollowCamera())
+		{
+			DefaultFOV = TargetCharacter->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
 	}
 	EquipWeapon(EquippedWeapon);
 }
@@ -41,7 +48,14 @@ void UCombatComponent::BeginPlay()
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	SetHudCrosshairs(DeltaTime);
+	if (TargetCharacter && TargetCharacter->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+		SetHudCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
+	}
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -104,6 +118,13 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
+
+		if (TargetCharacter)
+		{
+			float DistanceToCharacter = (TargetCharacter->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
+		}
+		
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
@@ -156,5 +177,22 @@ void UCombatComponent::SetHudCrosshairs(float DeltaTime)
 			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
 			TargetHud->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return;
+	if (bAiming)
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+	}
+	else
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);
+	}
+	if (TargetCharacter && TargetCharacter->GetFollowCamera())
+	{
+		TargetCharacter->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 	}
 }

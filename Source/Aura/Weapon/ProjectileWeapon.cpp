@@ -2,6 +2,9 @@
 
 
 #include "ProjectileWeapon.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Projectile.h"
 
@@ -18,18 +21,26 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		FRotator TargetRotation = ToTarget.Rotation();
 		if (ProjectileClass && InstigatorPawn)
 		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = GetOwner();
-			SpawnParams.Instigator = InstigatorPawn;
+			AActor* OwnerActor = GetOwner();
+			
+			FTransform SpawnTransform(TargetRotation, SocketTransform.GetLocation());
+
 			UWorld* World = GetWorld();
 			if (World)
 			{
-				World->SpawnActor<AProjectile>(
+				AProjectile* NewProjectile = World->SpawnActorDeferred<AProjectile>(
 					ProjectileClass,
-					SocketTransform.GetLocation(),
-					TargetRotation,
-					SpawnParams
-					);
+					SpawnTransform,       // Full spawn transform (location, rotation, scale)
+					OwnerActor,           // Owner
+					InstigatorPawn	     // Instigator
+				);
+
+				if (NewProjectile)
+				{
+					NewProjectile->DamageEffectParams = MakeDamageEffectParamsFromClassDefaults();
+
+					NewProjectile->FinishSpawning(SpawnTransform);
+				}
 			}
 		}
 	}

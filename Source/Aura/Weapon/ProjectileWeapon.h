@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayEffect.h"
 #include "Weapon.h"
 #include "ProjectileWeapon.generated.h"
 
@@ -16,10 +17,12 @@ class AURA_API AProjectileWeapon : public AWeapon
 	
 public:
 	virtual void Fire(const FVector& HitTarget) override;
-
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
+	
 private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileClass;
-	
 	
 };

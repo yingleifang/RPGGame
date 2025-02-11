@@ -9,6 +9,7 @@
 #include "Aura/Components/CombatComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/CapsuleComponent.h"
+#include "Player/ShooterPlayerState.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -34,6 +35,21 @@ AShooterCharacter::AShooterCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
+UAbilitySystemComponent* AShooterCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AShooterCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	auto ShooterPlayerState = GetPlayerState<AShooterPlayerState>();
+	check(ShooterPlayerState);
+	ShooterPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(ShooterPlayerState, this);
+	AbilitySystemComponent = ShooterPlayerState->GetAbilitySystemComponent();
+	AttributeSet = ShooterPlayerState->GetAttributeSet();
+}
+
 // Called when the game starts or when spawned
 void AShooterCharacter::BeginPlay()
 {
@@ -46,6 +62,7 @@ void AShooterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
 }
 
 void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -171,6 +188,12 @@ void AShooterCharacter::AimOffset(float DeltaTime)
 	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
+FVector AShooterCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr) return FVector();
+	return Combat->HitTarget;
+}
+
 AWeapon* AShooterCharacter::GetEquippedWeapon()
 {
 	if (Combat == nullptr) return nullptr;
@@ -213,4 +236,36 @@ void AShooterCharacter::Landed(const FHitResult& Hit)
 void AShooterCharacter::ResetJump()
 {
 	bCanJump = true;
+}
+
+void AShooterCharacter::HideCameraIfCharacterClose()
+{
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
+}
+
+inline void AShooterCharacter::PlayHitReactMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
