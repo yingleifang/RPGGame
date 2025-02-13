@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "AuraAbilityTypes.h"
-#include "GameplayEffectTypes.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
 
@@ -17,9 +16,6 @@ public:
 	// Sets default values for this actor's properties
 	AProjectile();
 
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
-	FGameplayEffectSpecHandle SpecHandle = nullptr;
-
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
 	UPROPERTY(VisibleAnywhere)
@@ -27,9 +23,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer;
 	class UParticleSystemComponent* TracerComponent;
-	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
-	FDamageEffectParams DamageEffectParams;
 
+	UPROPERTY(EditAnywhere, Category = "Applied Effects")
+	TSubclassOf<UGameplayEffect> GameplayEffectClass;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

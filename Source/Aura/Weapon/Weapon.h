@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpec.h"
+#include "ProjectileWeaponAbility.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -24,7 +26,11 @@ class AURA_API AWeapon : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TSubclassOf<UGameplayAbility> WeaponAbilityClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> DamageEffectClass;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -45,6 +51,7 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex
 	);
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -54,6 +61,7 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	virtual void Fire(const FVector& HitTarget);
+
 	
 	/**
 	* Textures for the weapon crosshairs

@@ -2,11 +2,17 @@
 
 
 #include "ProjectileWeapon.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Projectile.h"
+#include "ProjectileWeaponAbility.h"
+#include "AbilitySystem/ShooterAbilitySystemComponent.h"
+#include "Character/ShooterCharacter.h"
+
+void AProjectileWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+}
 
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
@@ -22,11 +28,10 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		if (ProjectileClass && InstigatorPawn)
 		{
 			AActor* OwnerActor = GetOwner();
-			
-			FTransform SpawnTransform(TargetRotation, SocketTransform.GetLocation());
 
-			UWorld* World = GetWorld();
-			if (World)
+			const FTransform SpawnTransform(TargetRotation, SocketTransform.GetLocation());
+
+			if (UWorld* World = GetWorld())
 			{
 				AProjectile* NewProjectile = World->SpawnActorDeferred<AProjectile>(
 					ProjectileClass,
@@ -37,12 +42,9 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 
 				if (NewProjectile)
 				{
-					NewProjectile->DamageEffectParams = MakeDamageEffectParamsFromClassDefaults();
-
 					NewProjectile->FinishSpawning(SpawnTransform);
 				}
 			}
 		}
 	}
 }
-

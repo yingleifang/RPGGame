@@ -7,13 +7,15 @@
 #include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "Aura/TurningInPlace.h"
+#include "Interaction/CombatInterface.h"
 #include "ShooterCharacter.generated.h"
 
 
 class UCameraComponent;
+class UGameplayAbility;
 
 UCLASS()
-class AURA_API AShooterCharacter : public ACharacter, public IAbilitySystemInterface
+class AURA_API AShooterCharacter : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
 	GENERATED_BODY()
 
@@ -23,16 +25,24 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const {return AttributeSet;}
 	virtual void PossessedBy(AController* NewController) override;
+	FOnDeathSignature OnDeathDelegate;
+	FOnASCRegistered OnAscRegistered;
+	FOnDamageSignature OnDamageDelegate;
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	TArray<FTaggedMontage> AttackMontages;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
 	class AWeapon* OverlappingWeapon;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+	UNiagaraSystem* BloodEffect;
 
 public:	
 	// Called every frame
@@ -59,6 +69,26 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	/** Combat Interface */
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;	
+	virtual void Die(const FVector& DeathImpulse) override;
+	virtual FOnDeathSignature& GetOnDeathDelegate() override;
+	// virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
+	// virtual bool IsDead_Implementation() const override;
+	virtual AActor* GetAvatar_Implementation() override;
+	// virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
+	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
+	// virtual int32 GetMinionCount_Implementation() override;
+	// virtual void IncremenetMinionCount_Implementation(int32 Amount) override;
+	// virtual ECharacterClass GetCharacterClass_Implementation() override;
+	virtual FOnASCRegistered& GetOnASCRegisteredDelegate() override;
+	// virtual USkeletalMeshComponent* GetWeapon_Implementation() override;
+	// virtual void SetIsBeingShocked_Implementation(bool bInShock) override;
+	// virtual bool IsBeingShocked_Implementation() const override;
+	virtual FOnDamageSignature& GetOnDamageSignature() override;
+	/** end Combat Interface */
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jump")
 	float JumpCooldownDuration = 0.2f; // Example cooldown duration in seconds
@@ -67,6 +97,9 @@ public:
 	FTimerHandle JumpCooldownTimerHandle;
 
 private:
+	UPROPERTY(EditAnywhere, Category = "Abilities")
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+	
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 	

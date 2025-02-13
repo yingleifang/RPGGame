@@ -2,15 +2,15 @@
 
 
 #include "Projectile.h"
-
-#include "Projects.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AuraGameplayTags.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Sound/SoundCue.h"
 #include "Aura/Public/Character/ShooterCharacter.h"
+#include "Character/AuraEnemy.h"
 
 // Sets default values
 AProjectile::AProjectile()
@@ -45,7 +45,6 @@ void AProjectile::BeginPlay()
 		);
 	}
 	CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
-
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -56,6 +55,19 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	{
 		ShooterCharacter->PlayHitReactMontage();
 	}
+
+	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
+	if (TargetASC != nullptr)
+	{
+		check(GameplayEffectClass);
+		FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+		const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectClass, 5.f, EffectContextHandle);
+		FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Damage_Physical, 1.f);
+		TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
+	}
+	
 	Destroy();
 }
 

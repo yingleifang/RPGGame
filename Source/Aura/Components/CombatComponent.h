@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Abilities/GameplayAbility.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -38,7 +39,7 @@ public:
 	void InterpFOV(float DeltaTime);
 	
 	friend class AShooterCharacter;
-	void EquipWeapon(class AWeapon* WeaponToEquip);
+	TSubclassOf<UGameplayAbility> EquipWeapon(class AWeapon* WeaponToEquip);
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere)

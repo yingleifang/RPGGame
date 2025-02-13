@@ -2,6 +2,9 @@
 
 
 #include "Character/ShooterCharacter.h"
+
+#include "AuraGameplayTags.h"
+#include "AbilitySystem/ShooterAbilitySystemComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -10,6 +13,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Player/ShooterPlayerState.h"
+#include "AbilitySystem/AuraAbilitySystemComponent.h"
+
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -54,8 +59,9 @@ void AShooterCharacter::PossessedBy(AController* NewController)
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
+
 
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
@@ -199,6 +205,53 @@ AWeapon* AShooterCharacter::GetEquippedWeapon()
 	if (Combat == nullptr) return nullptr;
 	return Combat->EquippedWeapon;
 }
+
+UAnimMontage* AShooterCharacter::GetHitReactMontage_Implementation()
+{
+	return HitReactMontage;
+}
+
+void AShooterCharacter::Die(const FVector& DeathImpulse)
+{
+}
+
+FOnDeathSignature& AShooterCharacter::GetOnDeathDelegate()
+{
+	return OnDeathDelegate;
+}
+
+AActor* AShooterCharacter::GetAvatar_Implementation()
+{
+	return this;
+}
+
+UNiagaraSystem* AShooterCharacter::GetBloodEffect_Implementation()
+{
+	return BloodEffect;
+}
+
+FTaggedMontage AShooterCharacter::GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag)
+{
+	for (FTaggedMontage TaggedMontage : AttackMontages)
+	{
+		if (TaggedMontage.MontageTag == MontageTag)
+		{
+			return TaggedMontage;
+		}
+	}
+	return FTaggedMontage();
+}
+
+FOnASCRegistered& AShooterCharacter::GetOnASCRegisteredDelegate()
+{
+	return OnAscRegistered;
+}
+
+FOnDamageSignature& AShooterCharacter::GetOnDamageSignature()
+{
+	return OnDamageDelegate;
+}
+
 
 void AShooterCharacter::TurnInPlace(float DeltaTime)
 {

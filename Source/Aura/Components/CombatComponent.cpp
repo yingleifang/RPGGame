@@ -58,11 +58,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
-void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+TSubclassOf<UGameplayAbility> UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	TargetCharacter->StartingAimRotation = FRotator(0.f, TargetCharacter->GetBaseAimRotation().Yaw, 0.f);
 
-	if (TargetCharacter == nullptr || WeaponToEquip == nullptr) return;
+	if (TargetCharacter == nullptr || WeaponToEquip == nullptr) return nullptr;
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = TargetCharacter->GetMesh()->GetSocketByName(FName("RightHandSocket"));
@@ -74,7 +74,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->ShowPickupWidget(false);
 	TargetCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 	TargetCharacter->bUseControllerRotationYaw = true;
-	
+	return WeaponToEquip->WeaponAbilityClass;
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming)

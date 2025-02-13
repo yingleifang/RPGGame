@@ -10,7 +10,7 @@ AShooterPlayerState::AShooterPlayerState()
 {
 	AbilitySystemComponent = CreateDefaultSubobject<UShooterAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
-	AttributeSet = CreateDefaultSubobject<UShooterAttributeSet>("AttributeSet");
+	AttributeSet = CreateDefaultSubobject<UAuraAttributeSet>("AttributeSet");
 }
 
 UAbilitySystemComponent* AShooterPlayerState::GetAbilitySystemComponent() const

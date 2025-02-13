@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "AuraGameplayTags.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
+#include "AI/AuraAIController.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/AuraPlayerController.h"
@@ -132,13 +133,13 @@ void UAuraAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData
 void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-	
+
 	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
 
 	if(Props.TargetCharacter->Implements<UCombatInterface>() && ICombatInterface::Execute_IsDead(Props.TargetCharacter)) return;
 
-	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
+	if (Data.EvaluatedData.Attribute.GetUProperty()->GetFName() == GetHealthAttribute().GetUProperty()->GetFName())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
 	}
@@ -158,7 +159,7 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 void UAuraAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 {
-	const float LocalIncomingDamage = GetIncomingDamage();
+	float LocalIncomingDamage = GetIncomingDamage();
 	SetIncomingDamage(0.f);
 	if (LocalIncomingDamage > 0.f)
 	{
@@ -326,17 +327,15 @@ void UAuraAttributeSet::SendXPEvent(const FEffectProperties& Props)
 void UAuraAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage, bool bBlockedHit, bool bCriticalHit) const
 {
 	if (!IsValid(Props.SourceCharacter) || !IsValid(Props.TargetCharacter)) return;
-	if (Props.SourceCharacter != Props.TargetCharacter)
+	
+	if(AAuraAIController* PC = Cast<AAuraAIController>(Props.SourceCharacter->Controller))
 	{
-		if(AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.SourceCharacter->Controller))
-		{
-			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
-			return;
-		}
-		if(AAuraPlayerController* PC = Cast<AAuraPlayerController>(Props.TargetCharacter->Controller))
-		{
-			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
-		}
+		PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
+		return;
+	}
+	if(AAuraAIController* PC = Cast<AAuraAIController>(Props.TargetCharacter->Controller))
+	{
+		PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
 	}
 }
 

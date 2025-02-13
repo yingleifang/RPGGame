@@ -8,6 +8,7 @@
 
 class UBlackboardComponent;
 class UBehaviorTreeComponent;
+class UDamageTextComponent;
 
 /**
  * 
@@ -18,8 +19,14 @@ class AURA_API AAuraAIController : public AAIController
 	GENERATED_BODY()
 public:
 	AAuraAIController();
+	UFUNCTION(Client, Reliable)
+	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit);
 protected:
 
 	UPROPERTY()
 	TObjectPtr<UBehaviorTreeComponent> BehaviorTreeComponent;
+private:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
+
 };

@@ -13,8 +13,8 @@ UCLASS()
 class AURA_API UShooterAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
-	
-	
-	
-	
+public:
+	void AddCharacterAbilities(TSubclassOf<UGameplayAbility> AbilityClass);
+	FGameplayEffectSpecHandle CreateDamageSpec(TSubclassOf<UGameplayEffect> DamageEffectClass,int32 AbilityLevel);
+
 };
