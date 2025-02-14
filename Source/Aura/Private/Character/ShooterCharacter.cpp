@@ -14,6 +14,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Player/ShooterPlayerState.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "Character/AuraEnemy.h"
+#include "Player/ShooterController.h"
 
 
 // Sets default values
@@ -43,6 +45,12 @@ AShooterCharacter::AShooterCharacter()
 UAbilitySystemComponent* AShooterCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+ECombatState AShooterCharacter::GetCombatState() const
+{
+	if (Combat == nullptr) return ECombatState::ECS_MAX;
+	return Combat->CombatState;
 }
 
 void AShooterCharacter::PossessedBy(AController* NewController)
@@ -87,14 +95,14 @@ void AShooterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	}
 }
 
-void AShooterCharacter::PlayFireMontage(bool bAiming)
+void AShooterCharacter::PlayFireMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && FireWeaponMontage)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
-		const FName SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		const FName SectionName = Combat->bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -162,6 +170,14 @@ bool AShooterCharacter::IsAiming()
 bool AShooterCharacter::IsFiring()
 {
 	return (Combat && Combat->bFiring);
+}
+
+void AShooterCharacter::Reload()
+{
+	if (Combat)
+	{
+		Combat->Reload();
+	}
 }
 
 void AShooterCharacter::AimOffset(float DeltaTime)
@@ -319,6 +335,25 @@ inline void AShooterCharacter::PlayHitReactMontage()
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AShooterCharacter::PlayReloadMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }

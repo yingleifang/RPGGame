@@ -45,4 +45,8 @@ UPROPERTY(BlueprintReadOnly, Category = "Meta Attributes")
 	ATTRIBUTE_ACCESSORS(UShooterAttributeSet, IncomingDamage);
 	
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
+private:
+	void HandleIncomingDamage(const FEffectProperties& Props);
+
 };

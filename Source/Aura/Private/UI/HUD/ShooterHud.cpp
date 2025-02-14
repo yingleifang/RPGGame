@@ -3,6 +3,9 @@
 
 #include "UI/HUD/ShooterHud.h"
 
+#include "CharacterOverlay.h"
+#include "Blueprint/UserWidget.h"
+
 void AShooterHud::DrawHUD()
 {
 	Super::DrawHUD();
@@ -40,6 +43,23 @@ void AShooterHud::DrawHUD()
 		}
 	}
 }
+
+void AShooterHud::BeginPlay()
+{
+	Super::BeginPlay();
+	AddCharacterOverlay();
+}
+
+void AShooterHud::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
+
 void AShooterHud::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
 {
 	const float TextureWidth = Texture->GetSizeX();

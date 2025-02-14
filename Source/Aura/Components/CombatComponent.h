@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
 #include "Components/ActorComponent.h"
+#include "Aura/Weapon/WeaponTypes.h"
+#include "Aura/Weapon/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.f
@@ -23,6 +25,7 @@ protected:
 	virtual void BeginPlay() override;
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	void SetHudCrosshairs(float DeltaTime);
+	int32 AmountToReload();
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -37,6 +40,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float ZoomInterpSpeed = 20.f;
 	void InterpFOV(float DeltaTime);
+	void Reload();
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void FinishReloading();
 	
 	friend class AShooterCharacter;
 	TSubclassOf<UGameplayAbility> EquipWeapon(class AWeapon* WeaponToEquip);
@@ -58,7 +64,10 @@ private:
 
 private:
 	void SetAiming(bool);
+	void Fire();
 	void SetFiring(bool);
+	void UpdateAmmoValues();
+
 	
 private:
 	bool bAiming;
@@ -69,5 +78,21 @@ private:
 */
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
-	
+
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+	void StartFireTimer();
+	void FireTimerFinished();
+	bool CanFire();
+	UPROPERTY()
+	int32 CarriedAmmo;
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30;
+	void InitializeCarriedAmmo();
+
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 };
+

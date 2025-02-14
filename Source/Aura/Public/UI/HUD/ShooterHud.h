@@ -30,8 +30,16 @@ class AURA_API AShooterHud : public AHUD
 public:
 	virtual void DrawHUD() override;
 
-public:
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	class UCharacterOverlay* CharacterOverlay;
+	
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}
+
+protected:
+	virtual void BeginPlay() override;
+	void AddCharacterOverlay();
+	
 private:
 	FHUDPackage HUDPackage;
 private:

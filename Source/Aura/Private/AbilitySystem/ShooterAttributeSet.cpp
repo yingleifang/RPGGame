@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
+#include "AbilitySystem/AuraAbilitySystemLibrary.h"
 #include "AbilitySystem/AuraAttributeSet.h"
 #include "GameFramework/Character.h"
 
@@ -70,6 +71,19 @@ void UShooterAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 			SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 			const bool bFatal = NewHealth <= 0.f;
 		}
+	}
+
+	HandleIncomingDamage(Props);
+}
+
+void UShooterAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
+{
+	const FVector& KnockbackForce = UAuraAbilitySystemLibrary::GetKnockbackForce(Props.EffectContextHandle);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, TEXT("Hello, UE5!"));
+	
+	if (!KnockbackForce.IsNearlyZero(1.f))
+	{
+		Props.TargetCharacter->LaunchCharacter(KnockbackForce, true, true);
 	}
 }
 

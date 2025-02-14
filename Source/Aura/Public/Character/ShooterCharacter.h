@@ -8,6 +8,7 @@
 #include "GameFramework/Character.h"
 #include "Aura/TurningInPlace.h"
 #include "Interaction/CombatInterface.h"
+#include "Aura/Weapon/CombatState.h"
 #include "ShooterCharacter.generated.h"
 
 
@@ -24,12 +25,15 @@ public:
 	AShooterCharacter();
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	UAttributeSet* GetAttributeSet() const {return AttributeSet;}
+	ECombatState GetCombatState() const;
 	virtual void PossessedBy(AController* NewController) override;
 	FOnDeathSignature OnDeathDelegate;
 	FOnASCRegistered OnAscRegistered;
 	FOnDamageSignature OnDamageDelegate;
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TArray<FTaggedMontage> AttackMontages;
+	UPROPERTY(VisibleAnywhere, BlueprintReadonly, meta = (AllowPrivateAccess = "true"))
+	class UCombatComponent* Combat;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -48,8 +52,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void SetOverlappingWeapon(AWeapon* Weapon);
-	void PlayFireMontage(bool);
+	void PlayFireMontage();
 	void PlayHitReactMontage();
+	void PlayReloadMontage();
 
 	virtual void PostInitializeComponents() override;
 	void EquipWeapon();
@@ -60,15 +65,17 @@ public:
 	bool IsWeaponEquipped();
 	bool IsAiming();
 	bool IsFiring();
+	void Reload();
 	void AimOffset(float DeltaTime);
 	FVector GetHitTarget() const;
 	FRotator StartingAimRotation;
 	AWeapon* GetEquippedWeapon();
+	
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-
+	
 	/** Combat Interface */
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;	
 	virtual void Die(const FVector& DeathImpulse) override;
@@ -106,9 +113,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* FollowCamera;
 	
-	UPROPERTY(VisibleAnywhere)
-	class UCombatComponent* Combat;
-	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
@@ -117,6 +121,9 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere)
+	UAnimMontage* ReloadMontage;
 	
 	float AO_Yaw;
 	float InterpAO_Yaw;

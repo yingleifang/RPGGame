@@ -17,6 +17,9 @@ class AURA_API AShooterController : public APlayerController
 	GENERATED_BODY()
 public:
 	AShooterController();
+	void SetHUDWeaponAmmo(int32 Ammo);
+	void SetHUDCarriedAmmo(int32 Ammo);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -61,5 +64,17 @@ private:
 	TObjectPtr<UInputAction> FireAction;
 	void Fire(const FInputActionValue& InputActionValue);
 	void StopFire(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> ReloadAction;
+	void Reload(const FInputActionValue& InputActionValue);
+	
+	UPROPERTY()
+	class AShooterCharacter* ShooterOwnerCharacter;
+	UPROPERTY()
+	class AShooterController* ShooterOwnerController;
+
+	UPROPERTY()
+	class AShooterHud* ShooterHud;
 
 };

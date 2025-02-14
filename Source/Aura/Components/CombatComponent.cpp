@@ -11,16 +11,14 @@
 #include "Aura/Public/Player/ShooterController.h"
 #include "Aura/Public/UI/HUD/ShooterHUD.h"
 #include "Camera/CameraComponent.h"
+#include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	if (EquippedWeaponClass)
-	{
-		EquippedWeapon = GetWorld()->SpawnActor<AWeapon>(EquippedWeaponClass);
-	}
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 400.f;
 }
@@ -40,6 +38,11 @@ void UCombatComponent::BeginPlay()
 			CurrentFOV = DefaultFOV;
 		}
 	}
+	if (EquippedWeaponClass)
+	{
+		EquippedWeapon = GetWorld()->SpawnActor<AWeapon>(EquippedWeaponClass);
+	}
+	InitializeCarriedAmmo();
 	EquipWeapon(EquippedWeapon);
 }
 
@@ -74,6 +77,27 @@ TSubclassOf<UGameplayAbility> UCombatComponent::EquipWeapon(AWeapon* WeaponToEqu
 	EquippedWeapon->ShowPickupWidget(false);
 	TargetCharacter->GetCharacterMovement()->bOrientRotationToMovement = false;
 	TargetCharacter->bUseControllerRotationYaw = true;
+	EquippedWeapon->SetHudAmmo();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	TargetController = TargetController == nullptr ? Cast<AShooterController>(TargetCharacter->Controller) : TargetController;
+	if (TargetController)
+	{
+		TargetController->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySound2D(
+			this,
+			EquippedWeapon->EquipSound
+		);
+	}
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 	return WeaponToEquip->WeaponAbilityClass;
 }
 
@@ -86,17 +110,81 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	}
 }
 
+void UCombatComponent::Fire()
+{
+	if (CanFire() && CombatState == ECombatState::ECS_Unoccupied)
+	{
+		bCanFire = false;
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		TargetCharacter->PlayFireMontage();
+		EquippedWeapon->Fire(HitResult.ImpactPoint);
+		StartFireTimer();	
+	}
+	
+}
+
 void UCombatComponent::SetFiring(bool bPressed)
 {
 	bFiring = bPressed;
 	if (EquippedWeapon == nullptr) return;
 	if (TargetCharacter && bPressed)
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		TargetCharacter->PlayFireMontage(bPressed);
-		EquippedWeapon->Fire(HitResult.ImpactPoint);
+		Fire();
 	}
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	if (TargetCharacter == nullptr || EquippedWeapon == nullptr) return;
+	int32 ReloadAmount = AmountToReload();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	TargetController = TargetController == nullptr ? Cast<AShooterController>(TargetCharacter->Controller) : TargetController;
+	if (TargetController)
+	{
+		TargetController->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
+void UCombatComponent::StartFireTimer()
+{
+	if (EquippedWeapon == nullptr || TargetCharacter == nullptr) return;
+	TargetCharacter->GetWorldTimerManager().SetTimer(
+	FireTimer,
+	this,
+	&UCombatComponent::FireTimerFinished,
+	EquippedWeapon->FireDelay
+	);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	if (EquippedWeapon == nullptr) return;
+	bCanFire = true;
+	if (bFiring && EquippedWeapon->bAutomatic)
+	{
+		Fire();
+	}
+	if (EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (EquippedWeapon == nullptr) return false;
+	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
 }
 
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
@@ -132,6 +220,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			End,
 			ECollisionChannel::ECC_Visibility
 		);
+		if (!TraceHitResult.bBlockingHit) TraceHitResult.ImpactPoint = End;
 	}
 }
 
@@ -180,6 +269,19 @@ void UCombatComponent::SetHudCrosshairs(float DeltaTime)
 	}
 }
 
+int32 UCombatComponent::AmountToReload()
+{
+	if (EquippedWeapon == nullptr) return 0;
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		int32 Least = FMath::Min(RoomInMag, AmountCarried);
+		return FMath::Clamp(RoomInMag, 0, Least);
+	}
+	return 0;
+}
+
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if (EquippedWeapon == nullptr) return;
@@ -194,5 +296,25 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	if (TargetCharacter && TargetCharacter->GetFollowCamera())
 	{
 		TargetCharacter->GetFollowCamera()->SetFieldOfView(CurrentFOV);
+	}
+}
+
+void UCombatComponent::Reload()
+{
+	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	{
+		if (TargetCharacter == nullptr) return;
+		CombatState = ECombatState::ECS_Reloading;
+		UpdateAmmoValues();
+		TargetCharacter->PlayReloadMontage();
+	}
+}
+
+void UCombatComponent::FinishReloading()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+	if (bFiring)
+	{
+		Fire();
 	}
 }

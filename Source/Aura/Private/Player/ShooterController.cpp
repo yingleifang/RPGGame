@@ -2,14 +2,45 @@
 
 
 #include "Player/ShooterController.h"
+
+#include "CharacterOverlay.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Character/ShooterCharacter.h"
+#include "Components/TextBlock.h"
+#include "UI/HUD/ShooterHud.h"
 
 AShooterController::AShooterController()
 {
 	bReplicates = true;
 }
+
+void AShooterController::SetHUDWeaponAmmo(int32 Ammo)
+{
+	ShooterHud = ShooterHud == nullptr ? Cast<AShooterHud>(GetHUD()) : ShooterHud;
+	bool bHUDValid = ShooterHud &&
+		ShooterHud->CharacterOverlay &&
+		ShooterHud->CharacterOverlay->AmmoAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHud->CharacterOverlay->AmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void AShooterController::SetHUDCarriedAmmo(int32 Ammo)
+{
+	ShooterHud = ShooterHud == nullptr ? Cast<AShooterHud>(GetHUD()) : ShooterHud;
+	bool bHUDValid = ShooterHud &&
+		ShooterHud->CharacterOverlay &&
+		ShooterHud->CharacterOverlay->CarriedAmmoAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		ShooterHud->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
 
 void AShooterController::BeginPlay()
 {
@@ -37,6 +68,8 @@ void AShooterController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AShooterController::Jump);
 	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AShooterController::Fire);
 	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AShooterController::StopFire);
+	EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AShooterController::Reload);
+
 }
 
 void AShooterController::MoveForward(const FInputActionValue& InputActionValue)
@@ -134,3 +167,11 @@ void AShooterController::StopFire(const FInputActionValue& InputActionValue)
 	}
 }
 
+void AShooterController::Reload(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter && ShooterCharacter->bCanJump)
+	{
+		ShooterCharacter->Reload();
+	}
+}

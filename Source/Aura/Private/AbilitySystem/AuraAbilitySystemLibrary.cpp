@@ -517,6 +517,7 @@ FGameplayEffectContextHandle UAuraAbilitySystemLibrary::ApplyDamageEffect(const 
 	FGameplayEffectContextHandle EffectContexthandle = DamageEffectParams.SourceAbilitySystemComponent->MakeEffectContext();
 	EffectContexthandle.AddSourceObject(SourceAvatarActor);
 	SetDeathImpulse(EffectContexthandle, DamageEffectParams.DeathImpulse);
+	
 	SetKnockbackForce(EffectContexthandle, DamageEffectParams.KnockbackForce);
 
 	SetIsRadialDamage(EffectContexthandle, DamageEffectParams.bIsRadialDamage);

@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayAbilitySpec.h"
 #include "ProjectileWeaponAbility.h"
 #include "GameFramework/Actor.h"
+#include "WeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -26,10 +26,30 @@ class AURA_API AWeapon : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
+	void SetHudAmmo();
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
 	TSubclassOf<UGameplayAbility> WeaponAbilityClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
+	UPROPERTY(EditAnywhere, Category="Combat")
+	float FireDelay = 0.15f;
+	UPROPERTY(EditAnywhere, Category="Combat")
+	bool bAutomatic = true;
+
+	UPROPERTY(EditAnywhere, Category="Combat")
+	int32 Ammo;
+	UPROPERTY(EditAnywhere, Category="Combat")
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class AShooterCharacter* ShooterOwnerCharacter;
+	UPROPERTY()
+	class AShooterController* ShooterOwnerController;
+	bool IsEmpty();
+	void AddAmmo(int32 AmmoToAdd);
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -60,8 +80,12 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	FORCEINLINE int32 GetAmmo() const {return Ammo;}
+	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
 	virtual void Fire(const FVector& HitTarget);
-
+	void SpendRound();
+	
 	
 	/**
 	* Textures for the weapon crosshairs
@@ -98,4 +122,6 @@ private:
 	class UAnimationAsset* FireAnimation;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 };
