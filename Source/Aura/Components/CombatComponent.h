@@ -71,6 +71,10 @@ public:
 	UPROPERTY()
 	AWeapon* RocketLauncherWeapon= nullptr;
 	
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+	
+	void UpdateAmmoValues();
+	
 private:
 	class AShooterCharacter* TargetCharacter;
 	class AShooterController* TargetController;
@@ -84,7 +88,6 @@ private:
 	void SetAiming(bool);
 	void Fire();
 	void SetFiring(bool);
-	void UpdateAmmoValues();
 
 	
 private:
@@ -105,12 +108,10 @@ private:
 	UPROPERTY()
 	int32 CarriedAmmo;
 
-	TMap<EWeaponType, int32> CarriedAmmoMap;
-
 	UPROPERTY(EditAnywhere)
-	int32 StartingARAmmo = 30;
+	int32 StartingARAmmo = 80;
 	UPROPERTY(EditAnywhere)
-	int32 StartingRocketAmmo = 0;
+	int32 StartingRocketAmmo = 8;
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo = 999;
 	UPROPERTY(EditAnywhere)

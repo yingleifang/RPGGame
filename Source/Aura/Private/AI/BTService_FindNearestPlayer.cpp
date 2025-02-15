@@ -30,7 +30,7 @@ void UBTService_FindNearestPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, u
 			}
 		}
 	}
-	if (ClosestDistance > 1500.f)
+	if (ClosestDistance > 2500.f)
 	{
 		return;
 	}

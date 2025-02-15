@@ -104,7 +104,7 @@ public:
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
 	virtual void Fire(const FVector& HitTarget);
 	void SpendRound();
-	
+	void EnableCustomDepth(bool bEnable);
 	
 	/**
 	* Textures for the weapon crosshairs

@@ -73,6 +73,9 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 TSubclassOf<UGameplayAbility> UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
+	WeaponToEquip->EnableCustomDepth(false);
+	WeaponToEquip->GetWeaponMesh()->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
+
 	if (IsValid(EquippedWeapon))
 	{
 		EquippedWeapon->SetActorHiddenInGame(true);
