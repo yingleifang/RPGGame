@@ -2,6 +2,8 @@
 
 
 #include "CombatComponent.h"
+
+#include "CharacterOverlay.h"
 #include "Aura/Weapon/Weapon.h"
 #include "Aura/Public/Character/ShooterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -12,6 +14,7 @@
 #include "Aura/Public/UI/HUD/ShooterHUD.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
+#include "Components/Image.h"
 #include "Sound/SoundCue.h"
 
 
@@ -38,12 +41,9 @@ void UCombatComponent::BeginPlay()
 			CurrentFOV = DefaultFOV;
 		}
 	}
-	if (EquippedWeaponClass)
-	{
-		EquippedWeapon = GetWorld()->SpawnActor<AWeapon>(EquippedWeaponClass);
-	}
+
 	InitializeCarriedAmmo();
-	EquipWeapon(EquippedWeapon);
+	EquipWeapon(GetWorld()->SpawnActor<AWeapon>(EquippedWeaponClass));
 }
 
 
@@ -58,11 +58,45 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		HitTarget = HitResult.ImpactPoint;
 		SetHudCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
+
+		CurrentRecoil = FMath::RInterpTo(CurrentRecoil, FRotator::ZeroRotator, DeltaTime, EquippedWeapon->RecoilRecoverySpeed);
+		APlayerController* PC = Cast<APlayerController>(Cast<APawn>(GetOwner())->GetController());
+		if (PC)
+		{
+			// Retrieve the current control rotation.
+			FRotator ControlRotation = PC->GetControlRotation();
+			
+			PC->SetControlRotation(ControlRotation + CurrentRecoil);
+		}
 	}
 }
 
 TSubclassOf<UGameplayAbility> UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
+	if (IsValid(EquippedWeapon))
+	{
+		EquippedWeapon->SetActorHiddenInGame(true);
+	}
+	
+	switch (WeaponToEquip->GetWeaponType())
+	{
+	case EWeaponType::EWT_AssaultRifle:
+		TargetHud->CharacterOverlay->AssaultRifleImage->SetVisibility(ESlateVisibility::Visible);
+		AssaultRifleWeapon = WeaponToEquip;
+		break;
+	case EWeaponType::EWT_Shotgun:
+		TargetHud->CharacterOverlay->ShugunImage->SetVisibility(ESlateVisibility::Visible);
+		ShotgunWeaopn = WeaponToEquip;
+		break;
+	case EWeaponType::EWT_RocketLauncher:
+		TargetHud->CharacterOverlay->RocketLauncherImage->SetVisibility(ESlateVisibility::Visible);
+		RocketLauncherWeapon = WeaponToEquip;
+		break;
+	case EWeaponType::EWT_Pistol:
+		if (PistolWeapon == nullptr)
+			PistolWeapon = WeaponToEquip;
+	}
+	
 	TargetCharacter->StartingAimRotation = FRotator(0.f, TargetCharacter->GetBaseAimRotation().Yaw, 0.f);
 
 	if (TargetCharacter == nullptr || WeaponToEquip == nullptr) return nullptr;
@@ -98,6 +132,7 @@ TSubclassOf<UGameplayAbility> UCombatComponent::EquipWeapon(AWeapon* WeaponToEqu
 	{
 		Reload();
 	}
+	EquippedWeapon->SetActorHiddenInGame(false);
 	return WeaponToEquip->WeaponAbilityClass;
 }
 
@@ -119,7 +154,17 @@ void UCombatComponent::Fire()
 		TraceUnderCrosshairs(HitResult);
 		TargetCharacter->PlayFireMontage();
 		EquippedWeapon->Fire(HitResult.ImpactPoint);
-		StartFireTimer();	
+		StartFireTimer();
+
+		float RecoilPitch = FMath::RandRange(EquippedWeapon->RecoilPitchMin, EquippedWeapon->RecoilPitchMax);
+		float RecoilYaw = FMath::RandRange(-EquippedWeapon->RecoilYawRange, EquippedWeapon->RecoilYawRange);
+
+		// Add the recoil impulse to our current recoil offset
+		CurrentRecoil.Pitch += RecoilPitch;
+		CurrentRecoil.Yaw += RecoilYaw;
+		APlayerController* PC = Cast<APlayerController>(Cast<APawn>(GetOwner())->GetController());
+		if (PC)
+			PC->ClientStartCameraShake(FireCameraShakeClass, EquippedWeapon->CameraShakeScale);
 	}
 	
 }
@@ -184,7 +229,11 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	
 }
 
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)

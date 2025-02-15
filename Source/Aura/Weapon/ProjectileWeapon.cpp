@@ -5,14 +5,12 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Projectile.h"
-#include "ProjectileWeaponAbility.h"
-#include "AbilitySystem/ShooterAbilitySystemComponent.h"
-#include "Character/ShooterCharacter.h"
 
 void AProjectileWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 }
+
 
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {

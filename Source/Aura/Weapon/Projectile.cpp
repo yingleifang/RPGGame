@@ -4,6 +4,7 @@
 #include "Projectile.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AuraGameplayTags.h"
+#include "RocketMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
@@ -26,8 +27,9 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);
 	
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;}
+	ProjectileRocketComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileRocketComponent->bRotationFollowsVelocity = true;
+}
 
 // Called when the game starts or when spawned
 void AProjectile::BeginPlay()
@@ -45,11 +47,13 @@ void AProjectile::BeginPlay()
 		);
 	}
 	CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
+	CollisionBox->IgnoreActorWhenMoving(Owner, true);
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
+
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 	if (TargetASC != nullptr)
 	{
@@ -58,7 +62,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 		EffectContextHandle.AddSourceObject(this);
 		const FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(GameplayEffectClass, 5.f, EffectContextHandle);
 		FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Damage_Physical, 1.f);
+		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Damage_Physical, Damage);
 		TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
 	}
 	

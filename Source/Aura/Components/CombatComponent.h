@@ -26,6 +26,14 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	void SetHudCrosshairs(float DeltaTime);
 	int32 AmountToReload();
+
+	/** Accumulated recoil offset applied to the camera */
+	FRotator CurrentRecoil;
+	
+	// Camera shake class to trigger on fire
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	TSubclassOf<UCameraShakeBase> FireCameraShakeClass;
+
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -52,10 +60,20 @@ public:
 	float AimWalkSpeed;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> EquippedWeaponClass;
+	class AShooterHud* TargetHud;
+
+	UPROPERTY()
+	AWeapon* PistolWeapon = nullptr;
+	UPROPERTY()
+	AWeapon* ShotgunWeaopn= nullptr;
+	UPROPERTY()
+	AWeapon* AssaultRifleWeapon= nullptr;
+	UPROPERTY()
+	AWeapon* RocketLauncherWeapon= nullptr;
+	
 private:
 	class AShooterCharacter* TargetCharacter;
 	class AShooterController* TargetController;
-	class AShooterHud* TargetHud;
 	
 	AWeapon* EquippedWeapon = nullptr;
 	
@@ -91,6 +109,14 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30;
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 999;
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 10;
+	
+	
 	void InitializeCarriedAmmo();
 
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;

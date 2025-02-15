@@ -68,6 +68,23 @@ private:
 	UPROPERTY(EditAnywhere, Category="Input")
 	TObjectPtr<UInputAction> ReloadAction;
 	void Reload(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> Weapon1;
+	void Weapon1Action(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> Weapon2;
+	void Weapon2Action(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> Weapon3;
+	void Weapon3Action(const FInputActionValue& InputActionValue);
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	TObjectPtr<UInputAction> Weapon4;
+	void Weapon4Action(const FInputActionValue& InputActionValue);
+	
 	
 	UPROPERTY()
 	class AShooterCharacter* ShooterOwnerCharacter;

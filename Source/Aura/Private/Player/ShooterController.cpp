@@ -6,6 +6,7 @@
 #include "CharacterOverlay.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Aura/Components/CombatComponent.h"
 #include "Character/ShooterCharacter.h"
 #include "Components/TextBlock.h"
 #include "UI/HUD/ShooterHud.h"
@@ -69,6 +70,10 @@ void AShooterController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &AShooterController::Fire);
 	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &AShooterController::StopFire);
 	EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &AShooterController::Reload);
+	EnhancedInputComponent->BindAction(Weapon1, ETriggerEvent::Triggered, this, &AShooterController::Weapon1Action);
+	EnhancedInputComponent->BindAction(Weapon2, ETriggerEvent::Triggered, this, &AShooterController::Weapon2Action);
+	EnhancedInputComponent->BindAction(Weapon3, ETriggerEvent::Triggered, this, &AShooterController::Weapon3Action);
+	EnhancedInputComponent->BindAction(Weapon4, ETriggerEvent::Triggered, this, &AShooterController::Weapon4Action);
 
 }
 
@@ -173,5 +178,49 @@ void AShooterController::Reload(const FInputActionValue& InputActionValue)
 	if (ShooterCharacter && ShooterCharacter->bCanJump)
 	{
 		ShooterCharacter->Reload();
+	}
+}
+
+void AShooterController::Weapon1Action(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		AWeapon* PistolWeapon = ShooterCharacter->Combat->PistolWeapon;
+		if (PistolWeapon == nullptr) return;
+		ShooterCharacter->Combat->EquipWeapon(PistolWeapon);
+	}
+}
+
+void AShooterController::Weapon2Action(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		AWeapon* ShotgunWeaopn = ShooterCharacter->Combat->ShotgunWeaopn;
+		if (ShotgunWeaopn == nullptr) return;
+		ShooterCharacter->Combat->EquipWeapon(ShotgunWeaopn);
+	}
+}
+
+void AShooterController::Weapon3Action(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		AWeapon* AssaultRifleWeapon = ShooterCharacter->Combat->AssaultRifleWeapon;
+		if (AssaultRifleWeapon == nullptr) return;
+		ShooterCharacter->Combat->EquipWeapon(AssaultRifleWeapon);
+	}
+}
+
+void AShooterController::Weapon4Action(const FInputActionValue& InputActionValue)
+{
+	AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(GetPawn());
+	if (ShooterCharacter)
+	{
+		AWeapon* RocketLauncherWeapon = ShooterCharacter->Combat->RocketLauncherWeapon;
+		if (RocketLauncherWeapon == nullptr) return;
+		ShooterCharacter->Combat->EquipWeapon(RocketLauncherWeapon);
 	}
 }

@@ -51,6 +51,25 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound;
 	
+	/** How fast the recoil recovers back to zero */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float RecoilRecoverySpeed = 5.f;
+
+	/** Minimum upward recoil applied per shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float RecoilPitchMin = 0.15f;
+
+	/** Maximum upward recoil applied per shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float RecoilPitchMax = 0.2f;
+
+	/** Maximum sideways (yaw) variation applied per shot */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float RecoilYawRange = 0.15f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float CameraShakeScale = 5.0f;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

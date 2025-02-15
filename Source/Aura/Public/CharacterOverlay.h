@@ -7,6 +7,8 @@
 #include "CharacterOverlay.generated.h"
 
 class UTextBlock;
+class UImage;
+
 /**
  * 
  */
@@ -19,4 +21,11 @@ public:
 	UTextBlock* AmmoAmount;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoAmount;
+	
+	UPROPERTY(meta = (BindWidget))
+	UImage* ShugunImage;
+	UPROPERTY(meta = (BindWidget))
+	UImage* AssaultRifleImage;
+	UPROPERTY(meta = (BindWidget))
+	UImage* RocketLauncherImage;
 };

@@ -19,7 +19,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	class URocketMovementComponent* ProjectileRocketComponent;
+
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer;
 	class UParticleSystemComponent* TracerComponent;
@@ -28,6 +29,10 @@ public:
 	TSubclassOf<UGameplayEffect> GameplayEffectClass;
 	
 protected:
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSound;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	UFUNCTION()
@@ -37,11 +42,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+	UPROPERTY(EditAnywhere, Category = "Applied Effects")
+	float Damage = 2;
+
 private:
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles;
-	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;
 	
 };
 
